@@ -1,38 +1,85 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Takayama EX</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<title>Takayama EX</title>
+
+<!-- EmailJS -->
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+
+<style>
+body{
+  font-family: sans-serif;
+  background:#0b1a2b;
+  color:white;
+  text-align:center;
+  padding:40px;
+}
+input,select,button{
+  padding:10px;
+  margin:10px;
+  border-radius:8px;
+  border:none;
+}
+button{
+  background:#00c3ff;
+  color:white;
+  cursor:pointer;
+}
+button:hover{
+  opacity:0.8;
+}
+</style>
 </head>
+
 <body>
 
-<header>Takayama EX</header>
+<h1>🚄 Takayama EX 予約</h1>
 
-<div class="card">
-  <input id="name" placeholder="お名前">
-  <input id="email" placeholder="メールアドレス">
-  
-  <select id="train">
-    <option>特急ひだ</option>
-    <option>快速たかやま</option>
-  </select>
+<form id="reserveForm">
+  <input type="text" id="name" placeholder="名前" required><br>
+  <input type="email" id="email" placeholder="メールアドレス" required><br>
+  <input type="date" id="date" required><br>
+  <button type="submit">予約する</button>
+</form>
 
-  <input id="date" type="date">
+<p id="result"></p>
 
-  <button id="reserveBtn">予約する</button>
+<script>
+(function(){
+  emailjs.init("yMSFUdstchX8uDdkN"); // ← Public Key
+})();
 
-  <div id="result"></div>
-  <canvas id="qrcode"></canvas>
-</div>
+document.getElementById("reserveForm").addEventListener("submit", function(e){
+  e.preventDefault();
 
-<!-- 外部ライブラリ -->
-<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  const name = document.getElementById("name").value;
+  const email = document.getElementById("email").value;
+  const date = document.getElementById("date").value;
 
-<!-- 自分のJS -->
-<script type="module" src="script.js"></script>
+  const templateParams = {
+    user_name: name,
+    user_email: email,
+    reserve_date: date
+  };
+
+  // ① ユーザーに送る
+  emailjs.send("service_tmzhmw2", "template_de3g0f5", templateParams)
+  .then(function(){
+      console.log("User mail sent");
+  });
+
+  // ② 管理者に送る
+  emailjs.send("service_tmzhmw2", "template_de3g0f5", templateParams)
+  .then(function(){
+      document.getElementById("result").innerHTML = "✅ 予約完了メールを送信しました！";
+  })
+  .catch(function(error){
+      document.getElementById("result").innerHTML = "❌ エラーが発生しました";
+      console.error(error);
+  });
+});
+</script>
 
 </body>
 </html>
