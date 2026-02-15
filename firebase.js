@@ -1,11 +1,11 @@
-import { initializeApp } from 
+import { initializeApp } from
 "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 
-import { getFirestore } from 
+import { getFirestore } from
 "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBJXGMsipD4chYb_jm7OkYRdIoOubQbak0",
+  apiKey: "AIzaSy...",
   authDomain: "takayama-smartex.firebaseapp.com",
   projectId: "takayama-smartex"
 };
