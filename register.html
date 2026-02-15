@@ -1,28 +1,50 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Smart-EX Register</title>
+</head>
+<body>
+
+<h2>新規登録</h2>
+
+<form id="registerForm">
+  <input type="text" id="name" placeholder="名前" required><br><br>
+  <input type="email" id="email" placeholder="メールアドレス" required><br><br>
+  <button type="submit">登録</button>
+</form>
+
+<p id="result"></p>
+
 <script type="module">
+
 import { db } from "./firebase.js";
-import { doc, setDoc } from
-"https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { collection, addDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-function generateNumber(){
-  return "TX" + Math.floor(100000 + Math.random()*900000);
-}
+const form = document.getElementById("registerForm");
+const result = document.getElementById("result");
 
-document.getElementById("registerBtn").addEventListener("click", async () => {
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-  const nameInput = document.getElementById("name");
+  const name = document.getElementById("name").value;
+  const email = document.getElementById("email").value;
 
-  if(!nameInput.value){
-    alert("名前を入力してください");
-    return;
+  try {
+    await addDoc(collection(db, "users"), {
+      name: name,
+      email: email,
+      createdAt: new Date()
+    });
+
+    result.textContent = "登録成功！";
+    form.reset();
+  } catch (error) {
+    result.textContent = "エラー: " + error.message;
   }
-
-  const memberNo = generateNumber();
-
-  await setDoc(doc(db,"users",memberNo), {
-    name: nameInput.value,
-    createdAt: new Date()
-  });
-
-  alert("会員番号：" + memberNo);
 });
+
 </script>
+
+</body>
+</html>
