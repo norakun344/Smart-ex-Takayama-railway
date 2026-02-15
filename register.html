@@ -1,50 +1,77 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>Smart-EX Register</title>
-</head>
-<body>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>スマートEX 新規登録</title>
 
-<h2>新規登録</h2>
+<!-- 共通CSS -->
+<link rel="stylesheet" href="style.css">
 
-<form id="registerForm">
-  <input type="text" id="name" placeholder="名前" required><br><br>
-  <input type="email" id="email" placeholder="メールアドレス" required><br><br>
-  <button type="submit">登録</button>
-</form>
-
-<p id="result"></p>
-
+<!-- Firebase SDK -->
 <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-import { db } from "./firebase.js";
-import { collection, addDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+  const firebaseConfig = {
+    apiKey: "AIzaSyBJXGMsipD4chYb_jm7OkYRdIoOubQbak0",
+    authDomain: "takayama-smartex.firebaseapp.com",
+    projectId: "takayama-smartex"
+  };
 
-const form = document.getElementById("registerForm");
-const result = document.getElementById("result");
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
+  window.registerUser = async function() {
+    const name = document.getElementById("name").value.trim();
+    const password = document.getElementById("password").value.trim();
 
-  const name = document.getElementById("name").value;
-  const email = document.getElementById("email").value;
+    if (!name || !password) {
+      alert("名前とパスワードを入力してください");
+      return;
+    }
 
-  try {
-    await addDoc(collection(db, "users"), {
-      name: name,
-      email: email,
-      createdAt: new Date()
-    });
+    // ランダム会員番号生成（数字10桁）
+    const userId = Math.floor(1000000000 + Math.random() * 9000000000).toString();
 
-    result.textContent = "登録成功！";
-    form.reset();
-  } catch (error) {
-    result.textContent = "エラー: " + error.message;
-  }
-});
+    try {
+      await addDoc(collection(db, "users"), {
+        name: name,
+        password: password,
+        userId: userId,
+        createdAt: new Date()
+      });
 
+      document.getElementById("result").innerHTML = `
+        <p>登録完了！あなたの会員番号は <strong>${userId}</strong> です。</p>
+      `;
+
+      // フォームをリセット
+      document.getElementById("registerForm").reset();
+
+    } catch (e) {
+      console.error("Error adding document: ", e);
+      alert("登録中にエラーが発生しました");
+    }
+  };
 </script>
 
+</head>
+<body>
+<div class="container">
+  <h1>スマートEX 新規登録</h1>
+
+  <form id="registerForm" onsubmit="event.preventDefault(); registerUser();">
+    <label for="name">名前</label>
+    <input type="text" id="name" placeholder="名前を入力">
+
+    <label for="password">パスワード</label>
+    <input type="password" id="password" placeholder="4〜8桁のパスワード">
+
+    <button type="submit">登録</button>
+  </form>
+
+  <div id="result"></div>
+</div>
 </body>
 </html>
