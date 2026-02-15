@@ -2,48 +2,100 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Takayama EX</title>
 
-<!-- EmailJS -->
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 
 <style>
 body{
-  font-family: sans-serif;
-  background:#0b1a2b;
+  font-family: -apple-system,BlinkMacSystemFont,sans-serif;
+  background: linear-gradient(135deg,#001f3f,#004080);
   color:white;
   text-align:center;
-  padding:40px;
+  padding:30px;
 }
+
+.container{
+  background:rgba(255,255,255,0.1);
+  backdrop-filter:blur(10px);
+  padding:30px;
+  border-radius:20px;
+  max-width:450px;
+  margin:auto;
+  box-shadow:0 0 30px rgba(0,0,0,0.5);
+}
+
+h1{
+  margin-bottom:20px;
+}
+
 input,select,button{
-  padding:10px;
-  margin:10px;
-  border-radius:8px;
+  width:90%;
+  padding:12px;
+  margin:8px 0;
+  border-radius:10px;
   border:none;
+  font-size:16px;
 }
+
 button{
   background:#00c3ff;
   color:white;
+  font-weight:bold;
   cursor:pointer;
+  transition:0.3s;
 }
+
 button:hover{
-  opacity:0.8;
+  background:#0099cc;
+}
+
+#result{
+  margin-top:15px;
+  font-weight:bold;
 }
 </style>
 </head>
 
 <body>
 
-<h1>🚄 Takayama EX 予約</h1>
+<div class="container">
+<h1>🚄 Takayama EX</h1>
 
 <form id="reserveForm">
-  <input type="text" id="name" placeholder="名前" required><br>
-  <input type="email" id="email" placeholder="メールアドレス" required><br>
-  <input type="date" id="date" required><br>
+  <input type="text" id="name" placeholder="名前" required>
+  <input type="email" id="email" placeholder="メールアドレス" required>
+
+  <select id="from" required>
+    <option value="">出発駅</option>
+    <option>高山</option>
+    <option>名古屋</option>
+    <option>富山</option>
+  </select>
+
+  <select id="to" required>
+    <option value="">到着駅</option>
+    <option>高山</option>
+    <option>名古屋</option>
+    <option>富山</option>
+  </select>
+
+  <input type="date" id="date" required>
+
+  <select id="people" required>
+    <option value="">人数</option>
+    <option>1</option>
+    <option>2</option>
+    <option>3</option>
+    <option>4</option>
+  </select>
+
   <button type="submit">予約する</button>
 </form>
 
 <p id="result"></p>
+</div>
 
 <script>
 (function(){
@@ -55,29 +107,43 @@ document.getElementById("reserveForm").addEventListener("submit", function(e){
 
   const name = document.getElementById("name").value;
   const email = document.getElementById("email").value;
+  const from = document.getElementById("from").value;
+  const to = document.getElementById("to").value;
   const date = document.getElementById("date").value;
+  const people = document.getElementById("people").value;
+
+  if(from === to){
+    document.getElementById("result").innerHTML = "⚠ 出発駅と到着駅が同じです";
+    return;
+  }
+
+  // 予約番号生成
+  const reserveId = "TKX-" + Math.floor(Math.random()*1000000);
 
   const templateParams = {
     user_name: name,
     user_email: email,
-    reserve_date: date
+    from_station: from,
+    to_station: to,
+    reserve_date: date,
+    people_count: people,
+    reserve_id: reserveId
   };
 
-  // ① ユーザーに送る
-  emailjs.send("service_tmzhmw2", "template_de3g0f5", templateParams)
+  Promise.all([
+    emailjs.send("service_tmzhmw2", "template_de3g0f5", templateParams),
+    emailjs.send("service_tmzhmw2", "template_de3g0f5", templateParams)
+  ])
   .then(function(){
-      console.log("User mail sent");
-  });
-
-  // ② 管理者に送る
-  emailjs.send("service_tmzhmw2", "template_de3g0f5", templateParams)
-  .then(function(){
-      document.getElementById("result").innerHTML = "✅ 予約完了メールを送信しました！";
+      document.getElementById("result").innerHTML =
+      "✅ 予約完了！<br>予約番号: " + reserveId;
+      document.getElementById("reserveForm").reset();
   })
   .catch(function(error){
       document.getElementById("result").innerHTML = "❌ エラーが発生しました";
       console.error(error);
   });
+
 });
 </script>
 
