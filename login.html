@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>ログイン</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>ログイン</header>
+
+<div class="box">
+<input id="id" placeholder="会員番号">
+<input id="pass" type="password" placeholder="パスワード">
+<button id="loginBtn">ログイン</button>
+<p id="result"></p>
+</div>
+
+<script type="module">
+import { db } from "./firebase.js";
+import { doc, getDoc } from 
+"https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+document.getElementById("loginBtn").addEventListener("click", async ()=>{
+
+  const id = document.getElementById("id").value;
+  const pass = document.getElementById("pass").value;
+
+  const snap = await getDoc(doc(db,"members",id));
+
+  if(snap.exists() && snap.data().password===pass){
+    localStorage.setItem("memberId",id);
+    window.location.href="reserve.html";
+  }else{
+    result.innerHTML="ログイン失敗";
+  }
+});
+</script>
+
+</body>
+</html>
