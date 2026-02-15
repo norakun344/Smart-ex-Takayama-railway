@@ -1,150 +1,135 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Takayama EX</title>
-
-<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
-body{
-  font-family: -apple-system,BlinkMacSystemFont,sans-serif;
-  background: linear-gradient(135deg,#001f3f,#004080);
-  color:white;
-  text-align:center;
-  padding:30px;
-}
-
-.container{
-  background:rgba(255,255,255,0.1);
-  backdrop-filter:blur(10px);
-  padding:30px;
-  border-radius:20px;
-  max-width:450px;
-  margin:auto;
-  box-shadow:0 0 30px rgba(0,0,0,0.5);
-}
-
-h1{
-  margin-bottom:20px;
-}
-
-input,select,button{
-  width:90%;
-  padding:12px;
-  margin:8px 0;
-  border-radius:10px;
-  border:none;
-  font-size:16px;
-}
-
-button{
-  background:#00c3ff;
-  color:white;
-  font-weight:bold;
-  cursor:pointer;
-  transition:0.3s;
-}
-
-button:hover{
-  background:#0099cc;
-}
-
-#result{
-  margin-top:15px;
-  font-weight:bold;
-}
+body{background:#001f3f;color:white;text-align:center;font-family:sans-serif;}
+.box{background:#002b55;padding:20px;margin:20px;border-radius:15px;}
+button{padding:10px 20px;border:none;border-radius:10px;background:#00c3ff;color:white;}
+.seat{display:inline-block;width:40px;height:40px;margin:5px;
+background:gray;border-radius:5px;cursor:pointer;}
+.selected{background:lime;}
 </style>
 </head>
 
 <body>
 
-<div class="container">
 <h1>🚄 Takayama EX</h1>
 
-<form id="reserveForm">
-  <input type="text" id="name" placeholder="名前" required>
-  <input type="email" id="email" placeholder="メールアドレス" required>
-
-  <select id="from" required>
-    <option value="">出発駅</option>
-    <option>高山</option>
-    <option>名古屋</option>
-    <option>富山</option>
-  </select>
-
-  <select id="to" required>
-    <option value="">到着駅</option>
-    <option>高山</option>
-    <option>名古屋</option>
-    <option>富山</option>
-  </select>
-
-  <input type="date" id="date" required>
-
-  <select id="people" required>
-    <option value="">人数</option>
-    <option>1</option>
-    <option>2</option>
-    <option>3</option>
-    <option>4</option>
-  </select>
-
-  <button type="submit">予約する</button>
-</form>
-
-<p id="result"></p>
+<div class="box">
+<h2>会員登録</h2>
+<input id="regName" placeholder="名前">
+<input id="regPass" type="password" placeholder="パスワード">
+<button onclick="register()">登録</button>
+<p id="regResult"></p>
 </div>
 
-<script>
-(function(){
-  emailjs.init("yMSFUdstchX8uDdkN"); // ← Public Key
-})();
+<div class="box">
+<h2>ログイン</h2>
+<input id="loginId" placeholder="会員番号">
+<input id="loginPass" type="password" placeholder="パスワード">
+<button onclick="login()">ログイン</button>
+<p id="loginResult"></p>
+</div>
 
-document.getElementById("reserveForm").addEventListener("submit", function(e){
-  e.preventDefault();
+<div class="box" id="reserveBox" style="display:none;">
+<h2>予約</h2>
+<input id="from" placeholder="出発">
+<input id="to" placeholder="到着">
+<input id="date" type="date">
 
-  const name = document.getElementById("name").value;
-  const email = document.getElementById("email").value;
-  const from = document.getElementById("from").value;
-  const to = document.getElementById("to").value;
-  const date = document.getElementById("date").value;
-  const people = document.getElementById("people").value;
+<h3>座席選択</h3>
+<div id="seats"></div>
 
-  if(from === to){
-    document.getElementById("result").innerHTML = "⚠ 出発駅と到着駅が同じです";
-    return;
-  }
+<button onclick="reserve()">予約確定</button>
+<p id="reserveResult"></p>
+<div id="qrcode"></div>
+</div>
 
-  // 予約番号生成
-  const reserveId = "TKX-" + Math.floor(Math.random()*1000000);
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc, addDoc, collection } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-  const templateParams = {
-    user_name: name,
-    user_email: email,
-    from_station: from,
-    to_station: to,
-    reserve_date: date,
-    people_count: people,
-    reserve_id: reserveId
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "takayama-smartex.firebaseapp.com",
+  projectId: "takayama-smartex"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+let currentMember = null;
+let selectedSeat = null;
+
+// 座席生成
+const seatContainer = document.getElementById("seats");
+["A1","A2","B1","B2","C1","C2"].forEach(seat=>{
+  const div = document.createElement("div");
+  div.className="seat";
+  div.innerText=seat;
+  div.onclick=()=>{
+    document.querySelectorAll(".seat").forEach(s=>s.classList.remove("selected"));
+    div.classList.add("selected");
+    selectedSeat=seat;
   };
+  seatContainer.appendChild(div);
+});
 
-  Promise.all([
-    emailjs.send("service_tmzhmw2", "template_de3g0f5", templateParams),
-    emailjs.send("service_tmzhmw2", "template_de3g0f5", templateParams)
-  ])
-  .then(function(){
-      document.getElementById("result").innerHTML =
-      "✅ 予約完了！<br>予約番号: " + reserveId;
-      document.getElementById("reserveForm").reset();
-  })
-  .catch(function(error){
-      document.getElementById("result").innerHTML = "❌ エラーが発生しました";
-      console.error(error);
+window.register = async function(){
+  const name = regName.value;
+  const pass = regPass.value;
+  const memberId = "TKX" + Math.floor(100000 + Math.random()*900000);
+
+  await setDoc(doc(db,"members",memberId),{
+    name:name,
+    password:pass
   });
 
-});
+  regResult.innerHTML="登録成功 会員番号: "+memberId;
+}
+
+window.login = async function(){
+  const id = loginId.value;
+  const pass = loginPass.value;
+
+  const docSnap = await getDoc(doc(db,"members",id));
+  if(docSnap.exists() && docSnap.data().password===pass){
+    currentMember=id;
+    loginResult.innerHTML="ログイン成功";
+    reserveBox.style.display="block";
+  }else{
+    loginResult.innerHTML="ログイン失敗";
+  }
+}
+
+window.reserve = async function(){
+  if(!selectedSeat){reserveResult.innerHTML="座席選択して";return;}
+
+  const reserveId="RSV"+Math.floor(Math.random()*1000000);
+
+  await addDoc(collection(db,"reservations"),{
+    memberId:currentMember,
+    from:from.value,
+    to:to.value,
+    date:date.value,
+    seat:selectedSeat,
+    reserveId:reserveId
+  });
+
+  reserveResult.innerHTML="予約完了 予約番号:"+reserveId;
+
+  new QRCode(document.getElementById("qrcode"),{
+    text:reserveId,
+    width:150,
+    height:150
+  });
+}
 </script>
 
 </body>
