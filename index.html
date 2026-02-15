@@ -1,19 +1,47 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Takayama EX</title>
-<script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
-body{background:#001f3f;color:white;text-align:center;font-family:sans-serif;}
-.box{background:#002b55;padding:20px;margin:20px;border-radius:15px;}
-button{padding:10px 20px;border:none;border-radius:10px;background:#00c3ff;color:white;}
-.seat{display:inline-block;width:40px;height:40px;margin:5px;
-background:gray;border-radius:5px;cursor:pointer;}
-.selected{background:lime;}
+body{
+  background:#001f3f;
+  color:white;
+  text-align:center;
+  font-family:sans-serif;
+}
+.box{
+  background:#002b55;
+  padding:20px;
+  margin:20px auto;
+  border-radius:15px;
+  max-width:400px;
+}
+input,button{
+  padding:10px;
+  margin:5px;
+  border-radius:8px;
+  border:none;
+}
+button{
+  background:#00c3ff;
+  color:white;
+  cursor:pointer;
+}
+.seat{
+  display:inline-block;
+  width:40px;
+  height:40px;
+  margin:5px;
+  background:gray;
+  border-radius:5px;
+  cursor:pointer;
+}
+.selected{
+  background:lime;
+}
 </style>
 </head>
 
@@ -25,7 +53,7 @@ background:gray;border-radius:5px;cursor:pointer;}
 <h2>会員登録</h2>
 <input id="regName" placeholder="名前">
 <input id="regPass" type="password" placeholder="パスワード">
-<button onclick="register()">登録</button>
+<button id="regBtn">登録</button>
 <p id="regResult"></p>
 </div>
 
@@ -33,30 +61,37 @@ background:gray;border-radius:5px;cursor:pointer;}
 <h2>ログイン</h2>
 <input id="loginId" placeholder="会員番号">
 <input id="loginPass" type="password" placeholder="パスワード">
-<button onclick="login()">ログイン</button>
+<button id="loginBtn">ログイン</button>
 <p id="loginResult"></p>
 </div>
 
 <div class="box" id="reserveBox" style="display:none;">
 <h2>予約</h2>
-<input id="from" placeholder="出発">
-<input id="to" placeholder="到着">
+<input id="from" placeholder="出発駅">
+<input id="to" placeholder="到着駅">
 <input id="date" type="date">
 
 <h3>座席選択</h3>
 <div id="seats"></div>
 
-<button onclick="reserve()">予約確定</button>
+<button id="reserveBtn">予約確定</button>
 <p id="reserveResult"></p>
 <div id="qrcode"></div>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, addDoc, collection } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+<!-- QR -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
+<script type="module">
+import { initializeApp } from 
+"https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+
+import { getFirestore, doc, setDoc, getDoc, addDoc, collection } from 
+"https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+/* 🔥 自分のFirebase情報に変更 */
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
+  apiKey: "ここにAPIキー",
   authDomain: "takayama-smartex.firebaseapp.com",
   projectId: "takayama-smartex"
 };
@@ -67,24 +102,32 @@ const db = getFirestore(app);
 let currentMember = null;
 let selectedSeat = null;
 
-// 座席生成
+/* 座席生成 */
 const seatContainer = document.getElementById("seats");
 ["A1","A2","B1","B2","C1","C2"].forEach(seat=>{
   const div = document.createElement("div");
   div.className="seat";
   div.innerText=seat;
   div.onclick=()=>{
-    document.querySelectorAll(".seat").forEach(s=>s.classList.remove("selected"));
+    document.querySelectorAll(".seat")
+      .forEach(s=>s.classList.remove("selected"));
     div.classList.add("selected");
     selectedSeat=seat;
   };
   seatContainer.appendChild(div);
 });
 
-window.register = async function(){
-  const name = regName.value;
-  const pass = regPass.value;
-  const memberId = "TKX" + Math.floor(100000 + Math.random()*900000);
+/* 会員登録 */
+document.getElementById("regBtn").addEventListener("click", async ()=>{
+  const name = document.getElementById("regName").value;
+  const pass = document.getElementById("regPass").value;
+
+  if(!name || !pass){
+    regResult.innerHTML="入力してください";
+    return;
+  }
+
+  const memberId="TKX"+Math.floor(100000+Math.random()*900000);
 
   await setDoc(doc(db,"members",memberId),{
     name:name,
@@ -92,24 +135,35 @@ window.register = async function(){
   });
 
   regResult.innerHTML="登録成功 会員番号: "+memberId;
-}
+});
 
-window.login = async function(){
-  const id = loginId.value;
-  const pass = loginPass.value;
+/* ログイン */
+document.getElementById("loginBtn").addEventListener("click", async ()=>{
+  const id = document.getElementById("loginId").value;
+  const pass = document.getElementById("loginPass").value;
 
-  const docSnap = await getDoc(doc(db,"members",id));
-  if(docSnap.exists() && docSnap.data().password===pass){
+  const snap = await getDoc(doc(db,"members",id));
+
+  if(snap.exists() && snap.data().password===pass){
     currentMember=id;
     loginResult.innerHTML="ログイン成功";
-    reserveBox.style.display="block";
+    document.getElementById("reserveBox").style.display="block";
   }else{
     loginResult.innerHTML="ログイン失敗";
   }
-}
+});
 
-window.reserve = async function(){
-  if(!selectedSeat){reserveResult.innerHTML="座席選択して";return;}
+/* 予約 */
+document.getElementById("reserveBtn").addEventListener("click", async ()=>{
+  if(!currentMember){
+    reserveResult.innerHTML="ログインしてください";
+    return;
+  }
+
+  if(!selectedSeat){
+    reserveResult.innerHTML="座席を選択してください";
+    return;
+  }
 
   const reserveId="RSV"+Math.floor(Math.random()*1000000);
 
@@ -124,12 +178,13 @@ window.reserve = async function(){
 
   reserveResult.innerHTML="予約完了 予約番号:"+reserveId;
 
+  document.getElementById("qrcode").innerHTML="";
   new QRCode(document.getElementById("qrcode"),{
     text:reserveId,
     width:150,
     height:150
   });
-}
+});
 </script>
 
 </body>
