@@ -3,74 +3,102 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Takayama EX 会員登録</title>
-<style>
-body { font-family: sans-serif; background: #f2f2f2; margin:0; padding:0; }
-.container { max-width: 400px; margin: 80px auto; background:#fff; padding:20px; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.1);}
-h1 { text-align:center; margin-bottom:20px; }
-label { display:block; margin-top:10px; }
-input { width:100%; padding:8px; margin-top:5px; box-sizing:border-box; }
-button { width:100%; padding:10px; margin-top:20px; background:#0073e6; color:#fff; border:none; border-radius:4px; cursor:pointer; }
-button:hover { background:#005bb5; }
-#result { margin-top:20px; text-align:center; font-weight:bold; }
-</style>
-</head>
-<body>
-
-<div class="container">
-  <h1>会員登録</h1>
-  <label for="name">名前</label>
-  <input type="text" id="name" placeholder="名前を入力">
-
-  <label for="password">パスワード</label>
-  <input type="password" id="password" placeholder="パスワードを入力">
-
-  <button id="registerBtn">登録</button>
-
-  <div id="result"></div>
-</div>
-
+<title>Takayama EX 登録</title>
+<link rel="shortcut icon" type="image/vnd.microsoft.icon" href="https://shinkansen2.jr-central.co.jp/favicon.ico">
+<link rel="stylesheet" href="style.css">
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-// Firebase 初期化
 const firebaseConfig = {
   apiKey: "AIzaSyBJXGMsipD4chYb_jm7OkYRdIoOubQbak0",
   authDomain: "takayama-smartex.firebaseapp.com",
   projectId: "takayama-smartex"
 };
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-document.getElementById("registerBtn").addEventListener("click", async () => {
+function generateUserID() {
+  const random = Math.floor(100000 + Math.random() * 900000); // 6桁ランダム
+  return `TKX${random}`;
+}
+
+// 登録処理
+window.registerUser = async function() {
   const name = document.getElementById("name").value.trim();
   const password = document.getElementById("password").value.trim();
-  const result = document.getElementById("result");
 
   if (!name || !password) {
-    result.innerText = "名前とパスワードを入力してください";
+    alert("名前とパスワードを入力してください");
     return;
   }
 
-  // TKX + 8桁ランダム数字で会員番号生成
-  const userId = "TKX" + Math.floor(10000000 + Math.random()*90000000);
-
+  const userID = generateUserID();
   try {
-    await addDoc(collection(db, "users"), {
-      userId,
-      name,
-      password
+    await setDoc(doc(db, "users", userID), {
+      name: name,
+      password: password
     });
-    result.innerHTML = `登録完了！<br>あなたの会員番号: <strong>${userId}</strong>`;
-    document.getElementById("name").value = "";
-    document.getElementById("password").value = "";
+    alert(`登録完了！あなたのEX IDは ${userID} です`);
+    document.getElementById("registerForm").reset();
   } catch (e) {
     console.error(e);
-    result.innerText = "登録に失敗しました";
+    alert("登録に失敗しました");
   }
-});
+}
+
+// ログイン処理
+window.loginUser = async function() {
+  const userID = document.getElementById("loginID").value.trim();
+  const password = document.getElementById("loginPassword").value.trim();
+
+  if (!userID || !password) {
+    alert("EX IDとパスワードを入力してください");
+    return;
+  }
+
+  try {
+    const docSnap = await getDoc(doc(db, "users", userID));
+    if (!docSnap.exists()) {
+      alert("EX IDが存在しません");
+      return;
+    }
+    const data = docSnap.data();
+    if (data.password === password) {
+      alert(`ログイン成功！ようこそ、${data.name}さん`);
+      document.getElementById("loginForm").reset();
+    } else {
+      alert("パスワードが間違っています");
+    }
+  } catch (e) {
+    console.error(e);
+    alert("ログインに失敗しました");
+  }
+}
 </script>
+</head>
+<body>
+
+<h2>新規登録</h2>
+<form id="registerForm" onsubmit="event.preventDefault(); registerUser();">
+  <label>名前</label>
+  <input type="text" id="name" placeholder="名前">
+  <label>パスワード</label>
+  <input type="password" id="password" placeholder="パスワード">
+  <button type="submit">登録</button>
+</form>
+
+<hr>
+
+<h2>ログイン</h2>
+<form id="loginForm" onsubmit="event.preventDefault(); loginUser();">
+  <label>EX ID</label>
+  <input type="text" id="loginID" placeholder="TKX123456">
+  <label>パスワード</label>
+  <input type="password" id="loginPassword" placeholder="パスワード">
+  <button type="submit">ログイン</button>
+</form>
 
 </body>
 </html>
