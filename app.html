@@ -1,1 +1,31 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>予約 | Takayama EX</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+  <div class="card">
+    <h1>予約</h1>
+    <p id="userInfo" class="userinfo"></p>
+
+    <input type="text" id="from" placeholder="出発駅">
+    <input type="text" id="to" placeholder="到着駅">
+    <input type="date" id="date">
+    <input type="text" id="seat" placeholder="座席（例 5A）">
+
+    <button class="primary" onclick="reserve()">予約する</button>
+    <button class="secondary" onclick="logout()">ログアウト</button>
+
+    <p id="result" class="message"></p>
+  </div>
+</div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
 
