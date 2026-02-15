@@ -3,113 +3,160 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Takayama EX | 予約システム</title>
-
-<!-- OGP -->
-<meta property="og:title" content="Takayama EX">
-<meta property="og:description" content="高山エリアのオンライン予約サービス">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://smart-ex.takayama-railway.f5.si/">
-<meta property="og:image" content="https://smart-ex.takayama-railway.f5.si/ogp.png">
-
-<link rel="icon" href="favicon.png">
+<title>Takayama EX</title>
 
 <style>
-body {
-  margin: 0;
-  font-family: "Segoe UI", sans-serif;
-  background: #f4f6f9;
+body{
+  font-family: Arial, sans-serif;
+  background:#f2f6ff;
+  margin:0;
 }
-
-header {
-  background: linear-gradient(90deg, #003366, #0066cc);
-  color: white;
-  padding: 20px;
-  text-align: center;
-  font-size: 28px;
-  font-weight: bold;
+header{
+  background:#003366;
+  color:white;
+  padding:15px;
+  text-align:center;
+  font-size:20px;
+  font-weight:bold;
 }
-
-.container {
-  max-width: 500px;
-  margin: 40px auto;
-  background: white;
-  padding: 30px;
-  border-radius: 15px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+.card{
+  background:white;
+  max-width:400px;
+  margin:30px auto;
+  padding:20px;
+  border-radius:12px;
+  box-shadow:0 4px 15px rgba(0,0,0,0.1);
 }
-
-h2 {
-  text-align: center;
-  margin-bottom: 20px;
+input, select{
+  width:100%;
+  padding:8px;
+  margin:8px 0;
+  border-radius:6px;
+  border:1px solid #ccc;
 }
-
-input, select, button {
-  width: 100%;
-  padding: 12px;
-  margin: 8px 0;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  font-size: 16px;
+button{
+  width:100%;
+  padding:10px;
+  background:#003366;
+  color:white;
+  border:none;
+  border-radius:8px;
+  font-size:16px;
 }
-
-button {
-  background: #0066cc;
-  color: white;
-  border: none;
-  cursor: pointer;
-  transition: 0.3s;
+#result{
+  margin-top:15px;
+  font-weight:bold;
 }
-
-button:hover {
-  background: #004999;
-}
-
-footer {
-  text-align: center;
-  margin: 30px 0;
-  font-size: 13px;
-  color: #666;
+canvas{
+  margin-top:15px;
 }
 </style>
 </head>
 
 <body>
 
-<header>
-🚄 Takayama EX
-</header>
+<header>Takayama EX</header>
 
-<div class="container">
-<h2>オンライン予約</h2>
-
-<input type="text" id="name" placeholder="お名前">
-<input type="email" id="email" placeholder="メールアドレス">
-
-<select id="train">
-  <option value="">列車を選択</option>
-  <option>ひだ1号</option>
-  <option>ひだ3号</option>
-  <option>ひだ5号</option>
-</select>
-
-<input type="date" id="date">
-
-<button onclick="reserve()">予約する</button>
-
-<p id="result"></p>
+<div class="card">
+  <input id="name" placeholder="お名前">
+  <input id="email" placeholder="メールアドレス">
+  <select id="train">
+    <option>特急ひだ</option>
+    <option>快速たかやま</option>
+  </select>
+  <input id="date" type="date">
+  <button onclick="reserve()">予約する</button>
+  <div id="result"></div>
+  <canvas id="qrcode"></canvas>
 </div>
 
-<footer>
-© 2026 Takayama Railway System
-</footer>
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 
-<script>
-function reserve() {
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+import { getFirestore, collection, addDoc }
+from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+/* 🔥 Firebase設定 */
+const firebaseConfig = {
+  apiKey: "YOUR_FIREBASE_CONFIG",
+  authDomain: "YOUR_FIREBASE_CONFIG",
+  projectId: "YOUR_FIREBASE_CONFIG",
+  storageBucket: "YOUR_FIREBASE_CONFIG",
+  messagingSenderId: "YOUR_FIREBASE_CONFIG",
+  appId: "YOUR_FIREBASE_CONFIG"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+/* 🔥 EmailJS初期化 */
+emailjs.init("YOUR_EMAILJS_PUBLIC_KEY");
+
+window.reserve = async function(){
+
   const name = document.getElementById("name").value;
   const email = document.getElementById("email").value;
   const train = document.getElementById("train").value;
   const date = document.getElementById("date").value;
 
-  if(!nam
+  if(!name || !email || !date){
+    alert("全て入力してください");
+    return;
+  }
+
+  try{
+
+    /* Firestore保存 */
+    await addDoc(collection(db,"reservations"),{
+      name:name,
+      email:email,
+      train:train,
+      date:date,
+      created:new Date()
+    });
+
+    /* ユーザー通知 */
+    await emailjs.send(
+      "YOUR_SERVICE_ID",
+      "USER_TEMPLATE_ID",
+      {
+        name:name,
+        to_email:email,
+        train:train,
+        date:date
+      }
+    );
+
+    /* 管理者通知 */
+    await emailjs.send(
+      "YOUR_SERVICE_ID",
+      "ADMIN_TEMPLATE_ID",
+      {
+        name:name,
+        to_email:email,
+        train:train,
+        date:date
+      }
+    );
+
+    /* QRコード生成 */
+    QRCode.toCanvas(
+      document.getElementById("qrcode"),
+      name + "-" + train + "-" + date
+    );
+
+    document.getElementById("result").innerText =
+      "予約完了！確認メールを送信しました。";
+
+  }catch(e){
+    alert("エラーが発生しました");
+    console.log(e);
+  }
+}
+
+</script>
+
+</body>
+</html>
