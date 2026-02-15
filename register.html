@@ -1,41 +1,28 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>会員登録</title>
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
-
-<header>会員登録</header>
-
-<div class="box">
-<input id="name" placeholder="名前">
-<input id="pass" type="password" placeholder="パスワード">
-<button id="regBtn">登録</button>
-<p id="result"></p>
-</div>
-
 <script type="module">
 import { db } from "./firebase.js";
-import { doc, setDoc } from 
+import { doc, setDoc } from
 "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-document.getElementById("regBtn").addEventListener("click", async ()=>{
+function generateNumber(){
+  return "TX" + Math.floor(100000 + Math.random()*900000);
+}
 
-  const name = name.value;
-  const pass = pass.value;
+document.getElementById("registerBtn").addEventListener("click", async () => {
 
-  const memberId="TKX"+Math.floor(100000+Math.random()*900000);
+  const nameInput = document.getElementById("name");
 
-  await setDoc(doc(db,"members",memberId),{
-    name:name,
-    password:pass
+  if(!nameInput.value){
+    alert("名前を入力してください");
+    return;
+  }
+
+  const memberNo = generateNumber();
+
+  await setDoc(doc(db,"users",memberNo), {
+    name: nameInput.value,
+    createdAt: new Date()
   });
 
-  result.innerHTML="登録成功 会員番号: "+memberId;
+  alert("会員番号：" + memberNo);
 });
 </script>
-
-</body>
-</html>
