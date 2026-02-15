@@ -2,74 +2,123 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>予約</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<header>予約</header>
+<header>🚄 Takayama EX</header>
 
-<div class="box">
-<input id="from" placeholder="出発駅">
-<input id="to" placeholder="到着駅">
+<div class="container">
+
+<div class="card">
+<h3>予約情報</h3>
 <input id="date" type="date">
+</div>
 
-<h3>座席選択</h3>
+<div class="card">
+<h3>座席選択（残席リアルタイム）</h3>
 <div id="seats"></div>
+</div>
+
+<div class="card">
+<h3>擬似クレジット決済</h3>
+<div class="credit-card">
+Takayama EX CARD<br>
+**** **** **** 1234
+</div>
+<input id="cardName" placeholder="カード名義">
+<input id="cardNumber" placeholder="カード番号">
+<input id="cardExp" placeholder="有効期限 12/28">
+</div>
 
 <button id="reserveBtn">予約確定</button>
 <p id="result"></p>
-<div id="qrcode"></div>
-</div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</div>
 
 <script type="module">
 import { db } from "./firebase.js";
-import { addDoc, collection } from 
-"https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import {
+collection,
+doc,
+setDoc,
+getDocs,
+onSnapshot
+} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
+const seatsDiv = document.getElementById("seats");
 let selectedSeat=null;
+let reservedSeats=[];
 
-["A1","A2","B1","B2"].forEach(seat=>{
-  const div=document.createElement("div");
-  div.className="seat";
-  div.innerText=seat;
-  div.onclick=()=>{
-    document.querySelectorAll(".seat").forEach(s=>s.classList.remove("selected"));
-    div.classList.add("selected");
-    selectedSeat=seat;
-  };
-  seats.appendChild(div);
+/* 座席生成 */
+const seatList=["A1","A2","A3","B1","B2","B3"];
+
+function renderSeats(){
+  seatsDiv.innerHTML="";
+  seatList.forEach(seat=>{
+    const div=document.createElement("div");
+    div.className="seat";
+    div.innerText=seat;
+
+    if(reservedSeats.includes(seat)){
+      div.classList.add("reserved");
+    }else{
+      div.onclick=()=>{
+        document.querySelectorAll(".seat")
+          .forEach(s=>s.classList.remove("selected"));
+        div.classList.add("selected");
+        selectedSeat=seat;
+      };
+    }
+
+    seatsDiv.appendChild(div);
+  });
+}
+
+/* リアルタイム監視 */
+function watchSeats(date){
+  const q = collection(db,"reservations");
+  onSnapshot(q,(snapshot)=>{
+    reservedSeats=[];
+    snapshot.forEach(doc=>{
+      if(doc.data().date===date){
+        reservedSeats.push(doc.data().seat);
+      }
+    });
+    renderSeats();
+  });
+}
+
+document.getElementById("date").addEventListener("change",e=>{
+  watchSeats(e.target.value);
 });
 
-document.getElementById("reserveBtn").addEventListener("click", async ()=>{
+/* 予約 */
+document.getElementById("reserveBtn").addEventListener("click",async()=>{
 
   const memberId=localStorage.getItem("memberId");
   if(!memberId){
     alert("ログインしてください");
-    location.href="login.html";
+    return;
+  }
+
+  if(!selectedSeat){
+    alert("座席を選択してください");
     return;
   }
 
   const reserveId="RSV"+Math.floor(Math.random()*1000000);
 
-  await addDoc(collection(db,"reservations"),{
+  await setDoc(doc(db,"reservations",reserveId),{
     memberId,
-    from:from.value,
-    to:to.value,
-    date:date.value,
     seat:selectedSeat,
+    date:date.value,
     reserveId
   });
 
   result.innerHTML="予約完了 予約番号:"+reserveId;
-
-  new QRCode(qrcode,{
-    text:reserveId,
-    width:150,
-    height:150
-  });
 });
 </script>
 
