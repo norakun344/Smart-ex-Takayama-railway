@@ -3,36 +3,113 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Takayama EX</title>
-<link rel="stylesheet" href="style.css">
+
+<title>Takayama EX | 予約システム</title>
+
+<!-- OGP -->
+<meta property="og:title" content="Takayama EX">
+<meta property="og:description" content="高山エリアのオンライン予約サービス">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://smart-ex.takayama-railway.f5.si/">
+<meta property="og:image" content="https://smart-ex.takayama-railway.f5.si/ogp.png">
+
+<link rel="icon" href="favicon.png">
+
+<style>
+body {
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+  background: #f4f6f9;
+}
+
+header {
+  background: linear-gradient(90deg, #003366, #0066cc);
+  color: white;
+  padding: 20px;
+  text-align: center;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.container {
+  max-width: 500px;
+  margin: 40px auto;
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+input, select, button {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
+
+button {
+  background: #0066cc;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+button:hover {
+  background: #004999;
+}
+
+footer {
+  text-align: center;
+  margin: 30px 0;
+  font-size: 13px;
+  color: #666;
+}
+</style>
 </head>
+
 <body>
 
+<header>
+🚄 Takayama EX
+</header>
+
 <div class="container">
-  <div class="card">
-    <h1>Takayama EX</h1>
+<h2>オンライン予約</h2>
 
-    <div class="tabs">
-      <button class="tab active" onclick="showLogin()">ログイン</button>
-      <button class="tab" onclick="showRegister()">新規登録</button>
-    </div>
+<input type="text" id="name" placeholder="お名前">
+<input type="email" id="email" placeholder="メールアドレス">
 
-    <div id="loginBox">
-      <input type="email" id="loginEmail" placeholder="メールアドレス">
-      <input type="password" id="loginPass" placeholder="パスワード">
-      <button class="primary" onclick="login()">ログイン</button>
-    </div>
+<select id="train">
+  <option value="">列車を選択</option>
+  <option>ひだ1号</option>
+  <option>ひだ3号</option>
+  <option>ひだ5号</option>
+</select>
 
-    <div id="registerBox" style="display:none;">
-      <input type="email" id="registerEmail" placeholder="メールアドレス">
-      <input type="password" id="registerPass" placeholder="パスワード">
-      <button class="primary" onclick="register()">アカウント作成</button>
-    </div>
+<input type="date" id="date">
 
-    <p id="message" class="message"></p>
-  </div>
+<button onclick="reserve()">予約する</button>
+
+<p id="result"></p>
 </div>
 
-<script type="module" src="app.js"></script>
-</body>
-</html>
+<footer>
+© 2026 Takayama Railway System
+</footer>
+
+<script>
+function reserve() {
+  const name = document.getElementById("name").value;
+  const email = document.getElementById("email").value;
+  const train = document.getElementById("train").value;
+  const date = document.getElementById("date").value;
+
+  if(!nam
