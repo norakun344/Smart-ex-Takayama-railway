@@ -2,27 +2,35 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>ロブ鉄 SmartEX - ログイン</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Takayama EX</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="app">
-  <h1>ロブ鉄 SmartEX</h1>
+<div class="container">
+  <div class="card">
+    <h1>Takayama EX</h1>
 
-  <h2>ログイン</h2>
-  <input type="email" id="loginEmail" placeholder="メールアドレス">
-  <input type="password" id="loginPass" placeholder="パスワード">
-  <button onclick="login()">ログイン</button>
+    <div class="tabs">
+      <button class="tab active" onclick="showLogin()">ログイン</button>
+      <button class="tab" onclick="showRegister()">新規登録</button>
+    </div>
 
-  <hr>
+    <div id="loginBox">
+      <input type="email" id="loginEmail" placeholder="メールアドレス">
+      <input type="password" id="loginPass" placeholder="パスワード">
+      <button class="primary" onclick="login()">ログイン</button>
+    </div>
 
-  <h2>アカウント作成</h2>
-  <input type="email" id="registerEmail" placeholder="メールアドレス">
-  <input type="password" id="registerPass" placeholder="パスワード">
-  <button onclick="register()">新規登録</button>
+    <div id="registerBox" style="display:none;">
+      <input type="email" id="registerEmail" placeholder="メールアドレス">
+      <input type="password" id="registerPass" placeholder="パスワード">
+      <button class="primary" onclick="register()">アカウント作成</button>
+    </div>
 
-  <p id="message"></p>
+    <p id="message" class="message"></p>
+  </div>
 </div>
 
 <script type="module" src="app.js"></script>
