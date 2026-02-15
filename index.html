@@ -83,6 +83,7 @@ button{
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <script type="module">
+
 import { initializeApp } from 
 "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 
@@ -91,9 +92,12 @@ import { getFirestore, doc, setDoc, getDoc, addDoc, collection } from
 
 /* 🔥 自分のFirebase情報に変更 */
 const firebaseConfig = {
-  apiKey: "ここにAPIキー",
+  apiKey: "ここに自分のAPIキー",
   authDomain: "takayama-smartex.firebaseapp.com",
-  projectId: "takayama-smartex"
+  projectId: "takayama-smartex",
+  storageBucket: "takayama-smartex.appspot.com",
+  messagingSenderId: "ここにSenderID",
+  appId: "ここにAppID"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -102,25 +106,33 @@ const db = getFirestore(app);
 let currentMember = null;
 let selectedSeat = null;
 
+/* DOM取得 */
+const regResult = document.getElementById("regResult");
+const loginResult = document.getElementById("loginResult");
+const reserveResult = document.getElementById("reserveResult");
+
 /* 座席生成 */
 const seatContainer = document.getElementById("seats");
+
 ["A1","A2","B1","B2","C1","C2"].forEach(seat=>{
   const div = document.createElement("div");
   div.className="seat";
   div.innerText=seat;
-  div.onclick=()=>{
+
+  div.addEventListener("click",()=>{
     document.querySelectorAll(".seat")
       .forEach(s=>s.classList.remove("selected"));
     div.classList.add("selected");
     selectedSeat=seat;
-  };
+  });
+
   seatContainer.appendChild(div);
 });
 
 /* 会員登録 */
 document.getElementById("regBtn").addEventListener("click", async ()=>{
-  const name = document.getElementById("regName").value;
-  const pass = document.getElementById("regPass").value;
+  const name = document.getElementById("regName").value.trim();
+  const pass = document.getElementById("regPass").value.trim();
 
   if(!name || !pass){
     regResult.innerHTML="入力してください";
@@ -134,13 +146,18 @@ document.getElementById("regBtn").addEventListener("click", async ()=>{
     password:pass
   });
 
-  regResult.innerHTML="登録成功 会員番号: "+memberId;
+  regResult.innerHTML="登録成功！ 会員番号: "+memberId;
 });
 
 /* ログイン */
 document.getElementById("loginBtn").addEventListener("click", async ()=>{
-  const id = document.getElementById("loginId").value;
-  const pass = document.getElementById("loginPass").value;
+  const id = document.getElementById("loginId").value.trim();
+  const pass = document.getElementById("loginPass").value.trim();
+
+  if(!id || !pass){
+    loginResult.innerHTML="入力してください";
+    return;
+  }
 
   const snap = await getDoc(doc(db,"members",id));
 
@@ -155,6 +172,7 @@ document.getElementById("loginBtn").addEventListener("click", async ()=>{
 
 /* 予約 */
 document.getElementById("reserveBtn").addEventListener("click", async ()=>{
+
   if(!currentMember){
     reserveResult.innerHTML="ログインしてください";
     return;
@@ -165,18 +183,28 @@ document.getElementById("reserveBtn").addEventListener("click", async ()=>{
     return;
   }
 
-  const reserveId="RSV"+Math.floor(Math.random()*1000000);
+  const fromVal = document.getElementById("from").value.trim();
+  const toVal = document.getElementById("to").value.trim();
+  const dateVal = document.getElementById("date").value;
+
+  if(!fromVal || !toVal || !dateVal){
+    reserveResult.innerHTML="全て入力してください";
+    return;
+  }
+
+  const reserveId="RSV"+Math.floor(100000+Math.random()*900000);
 
   await addDoc(collection(db,"reservations"),{
     memberId:currentMember,
-    from:from.value,
-    to:to.value,
-    date:date.value,
+    from:fromVal,
+    to:toVal,
+    date:dateVal,
     seat:selectedSeat,
-    reserveId:reserveId
+    reserveId:reserveId,
+    createdAt:new Date()
   });
 
-  reserveResult.innerHTML="予約完了 予約番号:"+reserveId;
+  reserveResult.innerHTML="予約完了！ 予約番号:"+reserveId;
 
   document.getElementById("qrcode").innerHTML="";
   new QRCode(document.getElementById("qrcode"),{
@@ -184,7 +212,9 @@ document.getElementById("reserveBtn").addEventListener("click", async ()=>{
     width:150,
     height:150
   });
+
 });
+
 </script>
 
 </body>
