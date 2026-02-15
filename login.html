@@ -1,38 +1,70 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>ログイン</title>
-<link rel="stylesheet" href="style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Takayama EX ログイン</title>
+<style>
+body { font-family: sans-serif; background: #f2f2f2; margin:0; padding:0; }
+.container { max-width: 400px; margin: 80px auto; background:#fff; padding:20px; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.1);}
+h1 { text-align:center; margin-bottom:20px; }
+label { display:block; margin-top:10px; }
+input { width:100%; padding:8px; margin-top:5px; box-sizing:border-box; }
+button { width:100%; padding:10px; margin-top:20px; background:#0073e6; color:#fff; border:none; border-radius:4px; cursor:pointer; }
+button:hover { background:#005bb5; }
+#loginResult { margin-top:20px; text-align:center; font-weight:bold; }
+</style>
 </head>
 <body>
 
-<header>ログイン</header>
+<div class="container">
+  <h1>ログイン</h1>
+  <label for="loginId">EX ID</label>
+  <input type="text" id="loginId" placeholder="TKX12345678">
 
-<div class="box">
-<input id="id" placeholder="会員番号">
-<input id="pass" type="password" placeholder="パスワード">
-<button id="loginBtn">ログイン</button>
-<p id="result"></p>
+  <label for="loginPassword">パスワード</label>
+  <input type="password" id="loginPassword" placeholder="パスワード">
+
+  <button id="loginBtn">ログイン</button>
+
+  <div id="loginResult"></div>
 </div>
 
 <script type="module">
-import { db } from "./firebase.js";
-import { doc, getDoc } from 
-"https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-document.getElementById("loginBtn").addEventListener("click", async ()=>{
+// Firebase 初期化
+const firebaseConfig = {
+  apiKey: "AIzaSyBJXGMsipD4chYb_jm7OkYRdIoOubQbak0",
+  authDomain: "takayama-smartex.firebaseapp.com",
+  projectId: "takayama-smartex"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-  const id = document.getElementById("id").value;
-  const pass = document.getElementById("pass").value;
+document.getElementById("loginBtn").addEventListener("click", async () => {
+  const id = document.getElementById("loginId").value.trim();
+  const password = document.getElementById("loginPassword").value.trim();
+  const result = document.getElementById("loginResult");
 
-  const snap = await getDoc(doc(db,"members",id));
+  if (!id || !password) {
+    result.innerText = "会員番号とパスワードを入力してください";
+    return;
+  }
 
-  if(snap.exists() && snap.data().password===pass){
-    localStorage.setItem("memberId",id);
-    window.location.href="reserve.html";
-  }else{
-    result.innerHTML="ログイン失敗";
+  try {
+    const q = query(collection(db, "users"), where("userId","==",id), where("password","==",password));
+    const querySnapshot = await getDocs(q);
+
+    if (!querySnapshot.empty) {
+      result.innerText = "ログイン成功！";
+    } else {
+      result.innerText = "会員番号またはパスワードが間違っています";
+    }
+  } catch (e) {
+    console.error(e);
+    result.innerText = "ログイン時にエラーが発生しました";
   }
 });
 </script>
