@@ -1,36 +1,98 @@
-body {
-  font-family: sans-serif;
-  background: #f2f2f2;
+* {
+  box-sizing: border-box;
 }
 
-.app {
-  max-width: 400px;
-  margin: 40px auto;
-  background: white;
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  background: linear-gradient(135deg, #007aff, #00c6ff);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.container {
+  width: 100%;
+  max-width: 420px;
   padding: 20px;
+}
+
+.card {
+  background: white;
+  padding: 25px;
   border-radius: 20px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  box-shadow: 0 15px 40px rgba(0,0,0,0.2);
 }
 
 h1 {
   text-align: center;
-  color: #007aff;
+  margin-bottom: 20px;
 }
 
 input {
   width: 100%;
-  padding: 10px;
-  margin-bottom: 10px;
-  border-radius: 10px;
-  border: 1px solid #ccc;
+  padding: 12px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  font-size: 14px;
 }
 
 button {
   width: 100%;
   padding: 12px;
+  border-radius: 12px;
+  border: none;
+  font-size: 15px;
+  cursor: pointer;
+  transition: 0.2s;
+  margin-bottom: 10px;
+}
+
+.primary {
   background: #007aff;
   color: white;
+}
+
+.primary:hover {
+  background: #005ecb;
+}
+
+.secondary {
+  background: #eee;
+}
+
+.secondary:hover {
+  background: #ddd;
+}
+
+.tabs {
+  display: flex;
+  margin-bottom: 15px;
+}
+
+.tab {
+  flex: 1;
+  padding: 10px;
   border: none;
-  border-radius: 10px;
-  margin-bottom: 10px;
+  background: #f3f3f3;
+  cursor: pointer;
+}
+
+.tab.active {
+  background: #007aff;
+  color: white;
+}
+
+.message {
+  text-align: center;
+  color: red;
+  font-size: 14px;
+}
+
+.userinfo {
+  text-align: center;
+  font-size: 13px;
+  color: #666;
 }
