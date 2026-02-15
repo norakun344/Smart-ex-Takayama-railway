@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>予約履歴</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>予約履歴</header>
+
+<div class="container">
+<div id="history"></div>
+</div>
+
+<script type="module">
+import { db } from "./firebase.js";
+import {
+collection,
+query,
+where,
+getDocs
+} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+const memberId=localStorage.getItem("memberId");
+const historyDiv=document.getElementById("history");
+
+async function loadHistory(){
+  const q=query(collection(db,"reservations"),
+  where("memberId","==",memberId));
+
+  const snap=await getDocs(q);
+
+  snap.forEach(doc=>{
+    const data=doc.data();
+    historyDiv.innerHTML+=`
+      <div class="card">
+      日付:${data.date}<br>
+      座席:${data.seat}<br>
+      予約番号:${data.reserveId}
+      </div>
+    `;
+  });
+}
+
+loadHistory();
+</script>
+
+</body>
+</html>
